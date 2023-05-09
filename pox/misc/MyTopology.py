@@ -6,6 +6,7 @@ from pox.misc.Dijkstras import *
 
 log = core.getLogger()
 
+# translates POX Topology into topology for throughput model
 class MyTopology:
     def __init__(self,topology):
         self.topology=topology
@@ -15,23 +16,6 @@ class MyTopology:
         self.hostAdj=None
         self.tm=None
         
-    #def getAllEntities(self):
-    #    def recurse(entity,known):
-    #        if entity in known:
-    #            return set()
-    #        known.add(entity)
-    #        if isinstance(entity,OpenFlowSwitch):
-    #            for key in entity.ports.keys():
-    #                known=known.union(recurse(entity.ports[key],known),known)
-    #        if isinstance(entity,OpenFlowPort):
-    #            for new_ent in entity.entities:
-    #                known=known.union(recurse(new_ent,known),known)
-    #        if isinstance(entity,Topology):
-    #            for key in entity._entities.keys():
-    #                known=known.union(recurse(entity._entities[key],known),known)
-    #        return known
-    #    return recurse(self.topology,set())
-
     def getSwitchAdjacency(self):
         if self.switchAdj!=None:
            return self.switchAdj 
@@ -60,7 +44,8 @@ class MyTopology:
         self.getSwitchAdjacency()
         self.hostAdj = {host:hostAdj(host,self.switchAdj) for host in hosts}
         return self.hostAdj
-    
+
+    # uses dijkstra's (Shortest Path First)
     def ospf_host_paths(self):
         entAdj = self.getSwitchAdjacency().copy()
         entAdj.update(self.getHostAdjacency())
@@ -77,12 +62,12 @@ class MyTopology:
         hosts=self.topology.getEntitiesOfType(t=Host)
         switches=self.topology.getEntitiesOfType(t=Switch)
         switchCap={sw:1 for sw in switches}
-        switch2switchCap={(src,dest):1 for src in switches for dest in switches if src!=dest }
+        switch2switchCap={(src,dest):1 for src in switches for dest in switches if src!=dest } # some of these connections don't exist
         host2hostTraffic={h2key:1 for h2key in host2hostPath}
         self.tm = ThroughputModel(hosts,switches,host2hostPath,host2hostTraffic,switchCap,switch2switchCap)
         return self.tm.host2hostBandwidth
 
-    def badness_score(self):
+    def throughput(self):
         hpb=self.host_path_bandwidth()
         bands=list(hpb.values())
         #return bands
@@ -129,8 +114,8 @@ class ThroughputModel:
     def host2hostBandwidth_ctor(self):
         self.switch2switchUse_ctor()
         self.switchUse_ctor()
-        log.debug("s2sUse %s"%self.switch2switchUse)
-        log.debug("switchUse %s"%self.switchUse)
+        #log.debug("s2sUse %s"%self.switch2switchUse)
+        #log.debug("switchUse %s"%self.switchUse)
         s2s_pc=_propCap(self.switch2switchCap,self.switch2switchUse)
         s_pc=_propCap(self.switchCap,self.switchUse)
         init={}
@@ -143,7 +128,7 @@ class ThroughputModel:
             for s in path:
                 if s_pc[s]<minPropCap:
                     minPropCap=s_pc[s]
-            init[h2key]=minPropCap
+            init[h2key]=minPropCap*self.host2hostTraffic[h2key]
         self.host2hostBandwidth=init
         return init
     
@@ -155,3 +140,4 @@ def _propCap(cap,use):
         else:
             init[capKey]=cap[capKey]/(1 if use[capKey]==0 else use[capKey])
     return init
+

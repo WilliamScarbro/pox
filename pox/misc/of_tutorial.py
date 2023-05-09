@@ -177,11 +177,14 @@ class Tutorial (object):
           log.debug("port %s already connected to %s" % (port,port.entities))
       mt=MyTopology(topology)
       log.debug(mt.getSwitchAdjacency())
-      log.debug(mt.host_path_bandwidth())
+      #log.debug(mt.host_path_bandwidth())
       log.debug("Badness: %s"% mt.badness_score())
+    
     #print(mt.getAllEntities())
     #self.act_like_hub(packet, packet_in)
-    self.act_like_switch(packet, packet_in)
+    #self.act_like_switch(packet, packet_in)
+    sw=topology.getEntityByID(event.dpid)
+    #log.debug("flow_table: %s"% sw.flow_table.entries)
     
 
 
