@@ -6,7 +6,8 @@ This is a fork of <a href="https://github.com/noxrepo/pox">noxrepo/pox</a>. I ha
 
 | File                      | Description                                  |
 |---------------------------|----------------------------------------------|
-| ./FinalProject.pdf              | Final Report                                 |
+| ./FinalProject.pdf        | Final Report                                 |
+| ./FinalProject_AIColorCode.pdf        | Final Report, highlights use of ChatGPT in report |
 | pox/misc/MyTopology.py    | Translates POX topology to list adjacency    |
 |                           | Implements throughput model                  |
 | pox/misc/Dijkstras.py     | Shortest Path First (Entirely AI generated)  |
